@@ -27,8 +27,13 @@ M.handle_header = function(diag_severity, diag_code, diagnostics_count, current_
         col_end = #code,
     }
 
-    vim.api.nvim_buf_set_lines(popup.get_buffnr(), current_line_num, current_line_num + #header_lines, false,
-        header_lines)
+    vim.api.nvim_buf_set_lines(
+        popup.get_buffnr(),
+        current_line_num,
+        current_line_num + #header_lines,
+        false,
+        header_lines
+    )
     return header_lines, severity_pos, code_pos
 end
 
@@ -74,7 +79,6 @@ M.handle_body = function(message, diag_count, index, current_line_num)
                 -- Insert the prettified lines
                 local lines = strings_utils.break_new_lines(temp_var.match)
 
-
                 for _, l in ipairs(lines) do
                     table.insert(new_body_lines, string.rep(" ", identation_size) .. l)
                 end
@@ -82,7 +86,7 @@ M.handle_body = function(message, diag_count, index, current_line_num)
                 table.insert(prettified_lines, {
                     line_start = prettified_start + 2, -- +2 for the header
                     line_end = prettified_start + #lines - 1,
-                    indentation = identation_size
+                    indentation = identation_size,
                 })
 
                 -- Insert the second part into new_body_lines
@@ -126,7 +130,13 @@ M.handle_body = function(message, diag_count, index, current_line_num)
     end
 
     local message_end_pos = message_start_row + #body_lines
-    vim.api.nvim_buf_set_lines(popup.get_buffnr(), message_start_row, message_end_pos, false, body_lines)
+    vim.api.nvim_buf_set_lines(
+        popup.get_buffnr(),
+        message_start_row,
+        message_end_pos,
+        false,
+        body_lines
+    )
     return message_end_pos, new_vars, prettified_lines
 end
 
@@ -148,11 +158,11 @@ M.show = function(is_enabled)
     local prettified = nil
 
     for index, diagnostic in ipairs(diagnostics) do
-        local header_lines, severity_pos, code_pos = M.handle_header(diagnostic.severity, diagnostic.code, #diagnostics,
-            current_line_num)
+        local header_lines, severity_pos, code_pos =
+            M.handle_header(diagnostic.severity, diagnostic.code, #diagnostics, current_line_num)
 
-        local message_end_pos, vars, prettified_ranges = M.handle_body(diagnostic.message, #diagnostics, index,
-            current_line_num)
+        local message_end_pos, vars, prettified_ranges =
+            M.handle_body(diagnostic.message, #diagnostics, index, current_line_num)
         prettified = prettified_ranges
 
         table.insert(severity_hl_ranges, severity_pos)
@@ -168,25 +178,53 @@ M.show = function(is_enabled)
     for i, range in ipairs(severity_hl_ranges) do
         local sev = severity.get_severity(diagnostics[i].severity)
         local hl_group = "Diagnostic" .. sev
-        vim.api.nvim_buf_add_highlight(popup.get_buffnr(), -1, hl_group, range.line, range.col_start, range.col_end)
+        vim.api.nvim_buf_add_highlight(
+            popup.get_buffnr(),
+            -1,
+            hl_group,
+            range.line,
+            range.col_start,
+            range.col_end
+        )
     end
 
     for _, range in ipairs(code_hl_ranges) do
         local hl_group = "Comment"
-        vim.api.nvim_buf_add_highlight(popup.get_buffnr(), -1, hl_group, range.line, range.col_start, range.col_end)
+        vim.api.nvim_buf_add_highlight(
+            popup.get_buffnr(),
+            -1,
+            hl_group,
+            range.line,
+            range.col_start,
+            range.col_end
+        )
     end
 
     for _, range in ipairs(vars_hl_ranges) do
         local hl_group = "String"
-        vim.api.nvim_buf_add_highlight(popup.get_buffnr(), -1, hl_group, range.line, range.col_start, range.col_end)
+        vim.api.nvim_buf_add_highlight(
+            popup.get_buffnr(),
+            -1,
+            hl_group,
+            range.line,
+            range.col_start,
+            range.col_end
+        )
     end
 
     -- If we have some prettified objects, highlight them
     if prettified ~= nil then
         for _, range in ipairs(prettified) do
-            local hl_group = "BufferDefaultCurrentADDED"
+            local hl_group = "BetterTsErrorsPrettified"
             for i = (range.line_start - 1), (range.line_end + 1) do
-                vim.api.nvim_buf_add_highlight(popup.get_buffnr(), -1, hl_group, i, range.indentation, popup.get_width())
+                vim.api.nvim_buf_add_highlight(
+                    popup.get_buffnr(),
+                    -1,
+                    hl_group,
+                    i,
+                    range.indentation,
+                    popup.get_width()
+                )
             end
         end
     end
